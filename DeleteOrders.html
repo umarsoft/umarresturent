@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+
+    <title>Chaghi 25- Dashboard</title>
+
+
+    <!-- Latest compiled and minified CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/dashboard.css" rel="stylesheet">
+
+
+
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+
+
+
+<script type="text/javascript">
+
+
+    setTimeout(function(){
+
+        $.post("http://localhost:8080/deleteallOrders",{}).then(function(data){
+            document.write("<h1>"+data+"</h1>");
+        });
+
+  },3000);
+</script>
+
+
+</head>
+
+<body id="body">
+    
+</body>
+</html>
+

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+
+    <title>Welcome Admin: Please Login</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/dashboard.css" rel="stylesheet">
+
+    <link href="css/login.css" rel="stylesheet">
+
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script src="js/tether.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/parse.min.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/notify.min.js"></script>
+</head>
+
+<body>
+
+
+<div class="modal-dialog">
+    <div class="loginmodal-container">
+        <h1>Login to Your Account</h1><br>
+        <form id="login-form">
+            <input type="text" id="username" name="user" placeholder="Username">
+            <input type="password" id="password" name="pass" placeholder="Password">
+            <input type="submit" id="login" name="login" class="login loginmodal-submit" value="Login">
+        </form>
+
+        <!--div class="login-help">
+            <a href="#">Register</a> - <a href="#">Forgot Password</a>
+        </div-->
+    </div>
+</div>
+
+
+
+
+
+<script type="text/javascript">
+
+    $("#login-form").submit(function (event) {
+
+        event.preventDefault();
+
+        var username = $("#username").val();
+        var password = $("#password").val();
+
+        console.log("Username: " + username);
+        console.log("Password " + password);
+
+        Parse.User.logIn(username, password, {
+            success: function (user) {
+
+                window.location.href = "index.html";
+                $.notify("Login successful...", { position:"right bottom" });
+                return true;
+            },
+            error: function (user, error) {
+                $.notify("Login failed...", { position:"right bottom" });
+
+console.log(JSON.stringfy(user));
+console.log(JSON.stringfy(error));
+
+                console.log(user + error);
+                return false;
+            }
+        });
+    });
+
+</script>
+
+</body>
+
+</html>

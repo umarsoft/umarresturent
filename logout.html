@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+
+    <title>Dashboard Template for Bootstrap</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/dashboard.css" rel="stylesheet">
+
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script src="js/tether.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/parse.min.js"></script>
+    <script src="js/common.js"></script>
+</head>
+
+<body>
+
+
+<script type="text/javascript">
+    $(document).ready(function () {
+
+        console.log("Performing submit");
+
+        //logout current user
+        if (Parse.User.current()) {
+            if (confirm("Are you sure you want to Logout?") == true) {
+                Parse.User.logOut();
+
+                // check if really logged out
+                if (Parse.User.current())
+                    console.log("Failed to log out!");
+            }
+
+        }
+
+        // do redirect
+        //window.location.replace("Sign_In.html");
+        // or
+        window.location.href = "login.html";
+
+    });
+
+
+</script>
+
+
+</body>
+
+</html>

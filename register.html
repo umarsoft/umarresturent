@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+
+    <title>Dashboard Template for Bootstrap</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/dashboard.css" rel="stylesheet">
+
+    <link href="css/login.css" rel="stylesheet">
+
+
+</head>
+
+<body>
+
+    <div class="modal-dialog">
+        <div class="loginmodal-container">
+            <h1>Register Your First <br/> Managament Account</h1><br>
+            <form id="register-form">
+                <input type="text" id="username" name="user" placeholder="Username" value="admin">
+                <input type="text" id="displayname" name="user" placeholder="Display Name" value="Admin">
+                <input type="text" id="mobilephone" name="user" placeholder="Mobile Phone" value="01012345678">
+                <input type="text" id="email" name="user" placeholder="Email" value="admin@umarsoft.com">
+
+                <input type="password" id="password" name="pass" placeholder="Password" value="123456">
+                <input type="password" id="repeat-password" name="pass" placeholder="Repeat Password" value="123456">
+                <input type="submit" id="register-user" class="login loginmodal-submit" value="Register">
+            </form>
+
+        </div>
+    </div>
+
+
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script src="js/tether.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/parse.min.js"></script>
+
+    <script type="text/javascript">
+        Parse.initialize("umarrestaurantAppId", "umarrestaurantJavascriptKey");
+        Parse.serverURL = 'http://ancient-escarpment-31176.herokuapp.com/parse';
+
+
+        $("#register-form").submit(function(event) {
+
+            event.preventDefault();
+
+            console.log("Register pressed");
+            var username = $("#username").val();
+            var displayname = $("#displayname").val();
+            var mobilephone = $("#mobilephone").val();
+            var email = $("#email").val();
+            var role = "MANAGEMENT";
+
+            var password = $("#password").val();
+            var repeatpassword = $("#repeat-password").val();
+
+            //            if (password != repeatpassword) {
+            //                alert("Passwords don't match...");
+            //                return;
+            //            }
+
+            var user = new Parse.User();
+            user.set("username", username);
+            user.set("displayname", displayname);
+            user.set("mobilephone", mobilephone);
+            user.set("email", email);
+            user.set("role", role);
+            user.set("password", password);
+
+            //at this point the "teacher" is the current user
+            //i save this user session for use later
+            user.signUp(null, {
+                success: function(user) {
+                    window.location.href = "index.html";
+                    console.log("Signup Successful");
+                },
+                error: function(user, error) {
+                    console.log("Error Signup: " + error.message);
+                }
+            });
+        });
+
+    </script>
+
+
+
+</body>
+
+</html>

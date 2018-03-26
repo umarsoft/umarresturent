@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+
+    <title>Meals</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/dashboard.css" rel="stylesheet">
+    <link href="css/common.css" rel="stylesheet">
+
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script src="js/tether.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/parse.js"></script>
+    <script src="js/common.js"></script>
+   <body> 
+    <button id="df">print</button>
+<script type="text/javascript">
+
+    $(document).ready(function () {
+    $("#df").click(function(){
+        console.log("hell");
+         $.post("http://localhost:8080/print",{file1:"70_I.html",file2:"70_J.html"},function(data){
+        console.log(data);
+    });
+
+    });
+
+    });
+
+$("#df").trigger("click");
+</script>
+
+</body>
+
+</html>

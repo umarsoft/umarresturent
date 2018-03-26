@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+
+    <title>User Manager</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/dashboard.css" rel="stylesheet">
+    <link href="css/common.css" rel="stylesheet">
+
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script src="js/tether.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/parse.min.js"></script>
+    <script src="js/common.js"></script>
+
+    <style>
+        #myInput {
+            background-image: url('img/searchicon.png'); /* Add a search icon to input */
+            background-position: 10px 12px; /* Position the search icon */
+            background-repeat: no-repeat; /* Do not repeat the icon image */
+            width: 100%; /* Full-width */
+            font-size: 16px; /* Increase font-size */
+            padding: 12px 20px 12px 40px; /* Add some padding */
+            border: 1px solid #ddd; /* Add a grey border */
+            margin-bottom: 12px; /* Add some space below the input */
+        }
+
+    </style>
+
+</head>
+
+<body>
+<nav class="navbar navbar-toggleable-md navbar-inverse fixed-top bg-inverse">
+    <button class="navbar-toggler navbar-toggler-right hidden-lg-up" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <a class="navbar-brand" href="#" ><img style="width:100px;margin-right:20px;" src="img/chaghi-logo.jpg">Chaghi 25 - Users</a>
+
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+        <nav id="sidebar" class="col-sm-3 col-md-2 hidden-xs-down bg-faded sidebar">
+
+        </nav>
+
+        <main class="col-sm-9 offset-sm-3 col-md-10 offset-md-2 pt-3">
+
+            <div id="content" class="table-responsive">
+                <h1>Users</h1>
+                <button id="new-user" class="new-button" href="#">New User</button>
+                <input type="text" id="myInput" onkeyup="myFunction()" placeholder="What are you looking for?..">
+
+                <table id="myTable" class="table table-striped">
+                    <thead>
+                    <tr>
+                        <td></td>
+                        <td>Username</td>
+                        <td>Display Name</td>
+                        <td>Email</td>
+                        <td>Mobile Phone</td>
+                        <td>Role</td>
+                        <td>Actions</td>
+                    </tr>
+                    </thead>
+                    <tbody id="users-body">
+
+                    </tbody>
+
+                </table>
+            </div>
+
+            <div id="form">
+                <h1>New User</h1>
+                <form id="new-user-form">
+                    <p>Username</p>
+                    <input id="user-username" type="text">
+
+                    <p>Display Name</p>
+                    <input id="user-displayname" type="text">
+
+
+                    <p>Password</p>
+                    <input id="user-password" type="password">
+
+                    <p>Repeat Password</p>
+                    <input id="user-repeatpassword" type="password">
+
+                    <p>Mobile Phone</p>
+                    <input id="user-mobilephone" type="text">
+
+                    <p>Email Address</p>
+                    <input id="user-email" type="text">
+
+                    <p>Role</p>
+                    <select id="user-role" type="text">
+                        <option selected>MANAGEMENT</option>
+                        <option>CACHEIR</option>
+                        <option>WAITER</option>
+                    </select>
+
+                    <p>Photo</p>
+                    <input type="file" id="pic"> <br/>
+
+                    <p><input id="new-user-submit" type="submit"> <input id="cancel" type="submit" value="Cancel"></p>
+
+
+                </form>
+            </div>
+
+
+
+        </main>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+
+
+    $(document).ready(function () {
+
+        check_auth("Users");
+
+        $("#form").hide();
+
+        getUsers();
+
+    });
+
+    $("#new-user").click(function () {
+        $("#content").hide();
+        $("#form").show();
+    });
+
+    var object_id = null;
+
+    $("#cancel").click(function () {
+        window.location.href = "users.html";
+    });
+
+
+
+    $("#users-body").on("click", "button", function (event) {
+        event.preventDefault();
+
+        var id = $(this).attr("href");
+        var action = $(this).attr("action");
+        console.log("action: " + action);
+        object_id = id;
+        var query = new Parse.Query(Parse.User);
+        query.equalTo("objectId", id);
+        query.find({
+            success: function (results) {
+                if (action == "edit") {
+                    $("#user-username").val(results[0].get("username"));
+                    $("#user-displayname").val(results[0].get("displayname"));
+                    $("#user-email").val(results[0].get("email_address"));
+                    $("#user-role").val(results[0].get("role"));
+                    $("#user-mobilephone").val(results[0].get("mobilephone"));
+
+
+                    $("#content").hide();
+                    $("#form").show();
+                } else if (action == "delete") {
+                    console.log("Deleting User: " + results[0].get("username"));
+                    if (confirm("Are you sure!") == true) {
+                        Parse.Cloud.run("updateUser", { "objectId": object_id, "status": "deleted"
+                        }).then(function(result) {
+
+                            console.log("result :" + JSON.stringify(result));
+
+                            window.location.href = "users.html";
+                        }, function(error) {
+                            console.log("error :" + JSON.stringify(error));
+                        });
+                    }
+                }
+            },
+            error: function (error) {
+                console.log("Query Error: " + error.message);
+            }
+        });
+
+    });
+
+    function getUsers() {
+        var query = new Parse.Query(Parse.User);
+        query.descending("createdAt");
+        query.equalTo("status", "active");
+        query.find({
+            success: function (results) {
+                var output = "";
+                console.log("Hi");
+
+                for (var i in results) {
+
+                    console.log(JSON.stringify(results[i]));
+
+                    var email = results[i].get("email_address");
+                    var username = results[i].get("username");
+                    var displayname = results[i].get("displayname");
+                    var mobilephone = results[i].get("mobilephone");
+                    var image = results[i].get("image");
+                    var role = results[i].get("role");
+
+                    var id = results[i].id;
+
+                    output += "<tr>";
+
+                    if (image != null) {
+                        output += "<td><img src=" + image.url() + " /></td>";
+                    } else {
+                        output += "<td><img style='width:40px;!important' src='img/login.png'/></td>";
+                    }
+
+                    //output += "<td><img src=" + image.url() + " /></td>";
+                    output += "<td>" + username + "</td>";
+                    output += "<td>" + displayname + "</td>";
+                    output += "<td>" + email + "</td>";
+                    output += "<td>" + mobilephone + "</td>";
+
+                    output += "<td>" + role + "</td>";
+
+                    output += "<td><button href='" + id + "' action='edit'>Edit</button> <button href='" + id + "' action='delete'>Delete</button></td>";
+                    output += "</tr>";
+
+                }
+
+                console.log(output);
+                $("#users-body").html(output);
+
+            },
+            error: function (error) {
+                console.log("Query Error: " + error.message);
+            }
+        });
+
+    }
+
+
+//    function login(logInfo, callback) {
+//        let username = logInfo.email,
+//                password = logInfo.password;
+//
+//        Parse.User.logIn(username, password).then(
+//                (user) => {
+//            if(!user) {
+//                callback('No user found');
+//            } else {
+//                callback(null, user);
+//            }
+//        },
+//        (error) => {
+//            callback(error.message, null);
+//        }
+//    );
+//    }
+//
+//    function update(userInfo, data, callback) {
+//        login(userInfo, (error, user) => {
+//            if(error) {
+//                callback('Can t find user');
+//            } else {
+//                getUpdatedData(user.get('data'), data, (error, updateData) => {
+//                    if(error) {
+//                        callback(error);
+//                    } else {
+//                        user.save({data: updateData}, /*{useMasterKey: true}*/ {sessionToken: user.get("sessionToken")}).then(
+//                                (test) => {
+//                            callback();
+//                        }, (err) => {
+//                            callback(error.message);
+//                        }
+//                    );
+//                    }
+//                });
+//            }
+//        });
+//    }
+
+    $("#new-user-form").submit(function (event) {
+        event.preventDefault();
+        var username = $("#user-username").val();
+        var displayname = $("#user-displayname").val();
+        var mobilephone = $("#user-mobilephone").val();
+        var email = $("#user-email").val();
+        var select = document.getElementById("user-role");
+        var role = select.options[select.selectedIndex].value;
+        var password = $("#user-password").val();
+        var repeatpassword = $("#user-repeatpassword").val();
+
+        console.log("Username: " + username);
+        console.log("displayname " + displayname);
+        console.log("mobilephone " + mobilephone);
+        console.log("email " + email);
+        console.log("role " + role);
+        console.log("password " + password);
+        console.log("repeatpassword " + repeatpassword);
+
+        if (password != repeatpassword) {
+            alert("Passwords don't match...");
+            return;
+        }
+
+        var fileUploadControl = $("#pic")[0];
+        if (fileUploadControl.files.length > 0) {
+            var file = fileUploadControl.files[0];
+            var filename = "";
+            var fullPath = document.getElementById('pic').value;
+            if (fullPath) {
+                var startIndex = (fullPath.indexOf('\\') >= 0 ? fullPath.lastIndexOf('\\') : fullPath.lastIndexOf('/'));
+                filename = fullPath.substring(startIndex);
+                if (filename.indexOf('\\') === 0 || filename.indexOf('/') === 0) {
+                    filename = filename.substring(1);
+                }
+                //alert(filename);
+            }
+            var parseFile = new Parse.File(filename, file);
+
+            //put this inside if {
+            parseFile.save().then(function () {
+                console.log("Image uploaded successfully...");
+            }, function (error) {
+                console.log("Error Uploading Image: " + error.message);
+            });
+        }
+
+
+        if (object_id != null) {
+            console.log("Editing user");
+            var query = new Parse.Query(Parse.User);
+            query.equalTo("objectId", object_id);
+            query.find({
+                success: function (results) {
+                    var user = results[0];
+
+                    user.set("username", username);
+                    user.set("displayname", displayname);
+                    user.set("mobilephone", mobilephone);
+                    user.set("email_address", email);
+                    user.set("email", email);
+                    user.set("role", role);
+                    user.set("password", password);
+
+                    if (parseFile != null) {
+                        user.set("image", parseFile);
+                    }
+
+                    console.log(JSON.stringify(user));
+
+                    var sessionToken = Parse.User.current().getSessionToken();
+
+                    console.log("sessionToken: " + sessionToken);
+
+
+                    Parse.Cloud.run("updateUser", { "objectId": object_id,"username":username, "displayname": displayname,
+                    "mobilephone":mobilephone, "email":email, "role":role, "password":password
+                    }).then(function(result) {
+
+                        console.log("result :" + JSON.stringify(result));
+
+                        window.location.href = "users.html";
+                    }, function(error) {
+                        console.log("error :" + JSON.stringify(error));
+                    });
+                },
+                error: function (error) {
+                    console.log("Query Error: " + error.message);
+                }
+            });
+        } else {
+            var query = new Parse.Query(Parse.User);
+            query.equalTo("username", username);
+            query.find({
+                success: function (results) {
+                    if (results.size > 0){
+                        Parse.Cloud.run("updateUser", { "objectId": object_id,"username":username, "displayname": displayname,
+                            "mobilephone":mobilephone, "email":email, "role":role, "password":password, "status":"active"
+                        }).then(function(result) {
+                            console.log("result :" + JSON.stringify(result));
+
+                            window.location.href = "users.html";
+                        }, function(error) {
+                            console.log("error :" + JSON.stringify(error));
+                        });
+                    }else{
+                        var user = new Parse.User();
+                        user.set("username", username);
+                        user.set("displayname", displayname);
+                        user.set("mobilephone", mobilephone);
+                        user.set("role", role);
+                        user.set("email_address", email);
+                        user.set("email", email);
+                        user.set("password", password);
+                        user.set("status", "active");
+
+                        if (parseFile != null) {
+                            user.set("image", parseFile);
+                        }
+
+                        console.log("Creating user");
+                        if (Parse.User.current() != null) {
+                            var sessionToken = Parse.User.current().getSessionToken();
+
+                            console.log("sessionToken: " + sessionToken);
+
+                            //at this point the "teacher" is the current user
+                            //i save this user session for use later
+                            user.signUp(null, {
+                                success: function (user) {
+
+                                    //right now i have successfully signed up a new "student" and am actually logged in as that student
+                                    Parse.User.become(sessionToken).then(function (user) {
+
+                                        console.log("User " + user.get("username") + " saved");
+                                        window.location.href = "users.html";
+
+                                    }, function (error) {
+                                        // The token could not be validated.
+                                        alert('error');
+                                    });
+
+                                },
+                                error: function (user, error) {
+                                    // Show the error message somewhere and let the user try again
+                                    alert("Error: " + error.code + " " + error.message);
+                                }
+                            });
+                        }
+                    }
+                },
+                error: function(error){
+
+                }});
+
+        }
+
+    });
+
+</script>
+
+
+</body>
+
+</html>

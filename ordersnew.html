@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+
+    <title>Restaurant Dashboard</title>
+
+
+    <!-- Latest compiled and minified CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/dashboard.css" rel="stylesheet">
+
+
+
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script src="js/tether.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/parse.min.js"></script>
+    <script src="js/underscore-min.js"></script>
+    <script type="text/javascript" src="js/common.js"></script>
+    <script src="js/notify.min.js"></script>
+
+    <style>
+        #myInput {
+            background-image: url('img/searchicon.png'); /* Add a search icon to input */
+            background-position: 10px 12px; /* Position the search icon */
+            background-repeat: no-repeat; /* Do not repeat the icon image */
+            width: 100%; /* Full-width */
+            font-size: 16px; /* Increase font-size */
+            padding: 12px 20px 12px 40px; /* Add some padding */
+            border: 1px solid #ddd; /* Add a grey border */
+            margin-bottom: 12px; /* Add some space below the input */
+        }
+
+        #myTable{
+            font-size: 14px;
+        }
+
+
+    </style>
+
+</head>
+
+<body>
+<nav class="navbar navbar-toggleable-md navbar-inverse fixed-top bg-inverse">
+    <button class="navbar-toggler navbar-toggler-right hidden-lg-up" type="button" data-toggle="collapse"
+            data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false"
+            aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <a class="navbar-brand" href="#" ><img style="width:100px;margin-right:20px;" src="img/chaghi-logo.jpg">Chaghi 25 - Orders</a>
+
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+        <nav id="sidebar" class="col-sm-3 col-md-2 hidden-xs-down bg-faded sidebar">
+
+        </nav>
+
+        <main class="col-sm-9 offset-sm-3 col-md-10 offset-md-2 pt-3" >
+
+            <div id="content" class="table-responsive" >
+                <h1>Orders</h1>
+
+                <form id="order-reset-form" style="float:right;margin-bottom:20px;">
+                    Order Number
+                    <input id="order-number" type="text"/>
+
+                    <input id="order-number-reset-submit" type="submit" value="Reset"/>
+                </form>
+
+
+
+
+                <input type="text" id="myInput" onkeyup="myFunction1()" placeholder="What are you looking for?..">
+
+
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item">
+                        <a id="pendingtab" class="nav-link active" data-toggle="tab" href="#pending" role="tab" aria-controls="home">Pending Orders</a>
+                    </li>
+                    <li class="nav-item">
+                        <a  id="completedtab" class="nav-link" data-toggle="tab" href="#completed" role="tab" aria-controls="profile">Completed Orders</a>
+                    </li>
+                    <li class="nav-item">
+                        <a  id="cancelledtab" class="nav-link" data-toggle="tab" href="#cancelled" role="tab" aria-controls="messages">Cancelled Orders</a>
+                    </li>
+
+                </ul>
+
+                <div class="tab-content">
+                    <div class="tab-pane active" id="pending" role="tabpanel"></div>
+                    <div class="tab-pane" id="completed" role="tabpanel"></div>
+                    <div class="tab-pane" id="cancelled" role="tabpanel"></div>
+
+                </div>
+
+
+
+                <!--ul class="nav nav-tabs" id="myTab" >
+
+                    <li><a id="pending" href="#">Pending Orders</a></li>
+                    <li><a id="completed" href="#">Completed Orders</a></li>
+                    <li><a id="cancelled" href="#">Cancelled</a></li>
+                </ul-->
+
+                <table id="myTable" class="table table-striped table table-hover table-bordered results">
+                    <thead>
+                    <tr>
+
+                        <td>#</td>
+                        <td>Content</td>
+                        <td>Waiter</td>
+                        <td>Table</td>
+                        <td>Date</td>
+                        <td>Status</td>
+                        <td>Total (No Tax/Service)</td>
+                        <td>Total</td>
+                        <td>Actions</td>
+                    </tr>
+                    </thead>
+                    <tbody id="orders-body">
+
+                    </tbody>
+
+                </table>
+            </div>
+
+            <style>
+                div#bill{
+                    width:450px;
+                    border:1px solid #ddd;
+                    margin-left:25%;
+                    padding:30px;
+                }
+            </style>
+
+            <div id="bill">
+
+
+                <div id="bill_content">
+
+                </div>
+
+                <br/>
+
+                <button id="finish-order" class="new-button" href="#">Finish Order</button>
+                <button id="print" class="print-button" href="#">Print</button>
+                <button id="cancel" class="new-button" href="#">Back</button>
+
+
+            </div>
+
+        </main>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        check_auth("Orders");
+
+
+        var query1 = new Parse.Query(Setting);
+
+        query1.equalTo("key", "OrderNumber");
+        query1.find({
+            success: function (results) {
+                var order_number = results[0].get("value") + " ";
+                console.log("order_number: " + order_number);
+
+                $("#order-number").val(order_number);
+            },
+            error: function (error) {}
+        });
+
+        $("#content").show();
+        $("#bill").hide();
+        getOrders("PENDING");
+
+        let query = new Parse.Query(Order);
+        let subscription = query.subscribe();
+
+        subscription.on('create', (object) => {
+            console.log("New Order added");
+
+
+            if (object.get("status") === "PENDING"){
+                $.notify("New Order#"+ object.get("number")  +" has been placed", { position:"right bottom" });
+            }
+
+
+            $("#order-number").val(object.get("number"));
+
+            getOrders("PENDING");
+
+        });
+
+
+
+
+    $("#pendingtab").click(function () {
+        getOrders("PENDING");
+    });
+
+    $("#completedtab").click(function () {
+        getOrders("COMPLETED");
+    });
+
+    $("#cancelledtab").click(function () {
+        getOrders("CANCELLED");
+    });
+        function activaTab(tab){
+            $('.nav-tabs a[href="#' + tab + '"]').tab('show');
+        };
+
+
+    $(".search").keyup(function () {
+        var searchTerm = $(".search").val();
+        var listItem = $('.results tbody').children('tr');
+        var searchSplit = searchTerm.replace(/ /g, "'):containsi('")
+
+        $.extend($.expr[':'], {'containsi': function(elem, i, match, array){
+            return (elem.textContent || elem.innerText || '').toLowerCase().indexOf((match[3] || "").toLowerCase()) >= 0;
+        }
+        });
+
+        $(".results tbody tr").not(":containsi('" + searchSplit + "')").each(function(e){
+            $(this).attr('visible','false');
+        });
+
+        $(".results tbody tr:containsi('" + searchSplit + "')").each(function(e){
+            $(this).attr('visible','true');
+        });
+
+        var jobCount = $('.results tbody tr[visible="true"]').length;
+        $('.counter').text(jobCount + ' item');
+
+        if(jobCount == '0') {$('.no-result').show();}
+        else {$('.no-result').hide();}
+    });
+
+
+
+    }) ;
+
+    $("#order-reset-form").submit(function (event) {
+        event.preventDefault();
+        var query = new Parse.Query(Setting);
+        query.equalTo("key", "OrderNumber");
+        query.find({success:function(results){
+            if (confirm("Are you sure you want to reset Order Number?") == true) {
+                var order_number = results[0];
+                order_number.set("value", "0");
+                console.log(JSON.stringify(order_number));
+                order_number.save({
+                    success: function () {
+                        window.location.href = "orders.html";
+                    }, error: function (error) {
+                        console.log(error.message);
+                    }
+                });
+            }
+
+        }, error:function(error){
+
+        }});
+    });
+
+
+    $("#finish-order").click(function () {
+        event.preventDefault();
+
+        console.log("object_id: " + object_id);
+        var query = new Parse.Query(Order);
+        query.equalTo("objectId", object_id);
+        query.find({
+            success: function (results) {
+                var order = results[0];
+                if (order.get("status") === "PENDING") {
+                    order.set("status", "COMPLETED");
+                    order.save({
+                        success: function () {
+                            window.location.href = "orders.html";
+                        }, error: function (error) {
+                            console.log(error.message);
+                        }
+                    });
+                } else {
+                    alert("Cannot bill order, invalid state");
+                }
+            },
+            error: function (error) {
+                console.log("Query Error: " + error.message);
+            }
+        });
+    });
+
+    $("#cancel").click(function () {
+        window.location.href = "orders.html";
+    });
+
+    $("#print").click(function () {
+        var prtContent = document.getElementById("bill_content");
+        var WinPrint = window.open('', '', 'left=0,top=0,width=800,height=900,toolbar=0,scrollbars=0,status=0');
+        WinPrint.document.write(prtContent.innerHTML);
+        WinPrint.document.close();
+        WinPrint.focus();
+        WinPrint.print();
+        WinPrint.close();
+    });
+
+    $("#orders-body").on("click", "button", function (event) {
+        event.preventDefault();
+
+        var id = $(this).attr("href");
+        var action = $(this).attr("action");
+        console.log("action: " + action);
+        object_id = id;
+        var query = new Parse.Query(Order);
+
+        query.equalTo("objectId", id);
+        query.find({
+            success: function (results) {
+                if (action == "bill") {
+                    $("#content").hide();
+                    $("#bill").show();
+                    var order = results[0];
+                    var output = "";
+                    output += "<h1>Order #" + order.get("number") + "</h1>";
+                    output += "<table><tr>";
+                    output += "<td width='100px'>Date:</td><td>" + order.get("date") + "</td>";
+                    output += "</tr><tr>";
+                    output += "<td width='100px'>Waiter:</td><td>" + order.get("waiter").get("displayname") + "</td>";
+                    output += "</tr><tr>";
+                    output += "<td width='100px'>Table:</td><td>" + order.get("table") + "</td>";
+                    output += "</tr><tr>";
+                    output += "<td width='100px'>Status:</td><td>" + order.get("status") + "</td>";
+                    output += "</tr><tr><td width='100px' style='vertical-align: top'>Order:</td><td>";
+
+//                    var meals = results[0].get("order_items");
+//                    for (var j in meals) {
+//                        output += "<li>" +  meals[j].get("meal") + " - $US " + meals[j].get("order_price") + "<br />" +
+//                        meals[j].get("mix_name") + " - $US " + meals[j].get("mix_price") +
+//                        "</li>";
+//                    }
+
+
+                    var order_details = order.get("order_details");
+                    var s = "";
+
+                    console.log("order_details: " + order_details);
+
+                    var json = JSON.parse(order_details);
+
+                    var jArray = json.order_items;
+                    console.log("jArray: " + JSON.stringify(jArray));
+
+                    for (var x in jArray) {
+                        var json_data = jArray[x];
+
+                        for (var y in json_data) {
+                            var object = json_data[y];
+                            console.log("object: " + object);
+                            var meal = object.meal;
+                            var quantity = object.quantity;
+                            var price = object.price;
+
+                            s += "<li style='font-size:10px;'>" + quantity + "x " + meal + " (" + currency + price*quantity + ")</li>";
+                            console.log("s: " + s);
+                        }
+                    }
+
+                    output += s;
+
+                    output += "</td></tr><tr style='font-size:12px;text-align: right'>";
+                    var tt = order.get("bill_no_tax_service").replace("Service", "<br>Service");
+                    tt = tt.replace("- Tax", "<br>Tax");
+                    output += "<td colspan='2'><br><br>" + tt + "</td>";
+                    output += "</tr><tr>";
+                    output += "<td colspan='2'><hr/></td>";
+                    output += "</tr><tr>";
+                    output += "<td colspan='2' style='text-align: right;'><b>Total: " + order.get("bill_tax_service") + "</b></td>";
+                    output += "</tr>";
+
+                    $("#bill_content").html(output);
+                } else if (action == "cancel") {
+                    if (confirm("Are you sure!") == true) {
+                        var order = results[0];
+                        order.set("status", "CANCELLED");
+                        order.save({
+                            success: function () {
+                                window.location.href = "orders.html";
+                            }, error: function (error) {
+                                console.log(error.message);
+                            }
+                        });
+                    }
+
+                }
+            },
+            error: function (error) {
+                console.log("Query Error: " + error.message);
+            }
+        });
+
+    });
+
+
+
+    function getOrders(status) {
+        var query = new Parse.Query(Order);
+        query.include("waiter");
+        query.equalTo("status", status);
+        query.descending("createdAt");
+        query.find({
+            success: function (results) {
+                var output = "";
+
+                console.log("hello....1");
+
+                for (var i in results) {
+                    console.log("hello....2");
+                    var order = results[i];
+                    //var meals = results[i].get("order_items");
+                    //console.log("meals: " + JSON.stringify(meals));
+
+                    var number = order.get("number");
+                    //var meals = results[i].get("meals");
+                    var waiter = order.get("waiter");
+                    var table = order.get("table");
+                    var date = order.get("date");
+                    var status = order.get("status");
+                    var id = order.id;
+
+                    output += "<tr>";
+                    //output += "<td><img width=150 src='" + order.get("order_image") + "' /></td>";
+                    output += "<td class='order_number'>" + order.get("number") + "</td>";
+
+                    output += "<td width='300'>";
+
+                  output += "<ul>";
+                    var meals = results[i].get("order_items");
+                    for (var j in meals) {
+                        output += "<li>" +  meals[j].get("meal") + " - $US " + meals[j].get("order_price") + "<br />" +
+                                            meals[j].get("mix_name") + " - $US " + meals[j].get("mix_price") +
+                       "</li>";
+                    }
+
+                   output += "</ul>";
+
+                    console.log("order: " + JSON.stringify(order));
+                    var order_details = order.get("order_details");
+                    var s = "";
+
+                    var json = JSON.parse(order_details);
+
+                    var jArray = json.order_items;
+
+
+                    for (var x in jArray) {
+                        var json_data = jArray[x];
+
+                        for (var y in json_data) {
+                            console.log("hello....3");
+                            var object = json_data[y];
+                            console.log("object: " + JSON.stringify(object));
+                            var meal = object.meal;
+                            var quantity = object.quantity;
+                            var price = object.price;
+                            console.log("hello....333: " + currency);
+                            s += "<li>" + quantity + "x " + meal + " (" + currency + price*quantity + ")</li>";
+                            console.log("hello....33333");
+                        }
+                    }
+                    console.log("hello....4");
+                        output += s;
+
+                        output += "</td>";
+
+                    console.log("hello....5");
+
+
+                    var waiter = order.get("waiter");
+                    output += "<td>" + waiter.get("displayname") + "</td>";
+                    output += "<td>" + order.get("table") + "</td>";
+                    output += "<td>" + order.get("date") + "</td>";
+                    output += "<td>" + order.get("status") + "</td>";
+                    output += "<td>" + order.get("bill_no_tax_service") + "</td>";
+                    output += "<td>" + order.get("bill_tax_service") + "</td>";
+
+                    if (status === "PENDING"){
+
+                    output += "<td width=100px><button style='border: 0;background: url(img/bill.png);width:30px;height:30px;background-size: 100%;' href='" + order.id + "' action='bill' title='Bill Order'></button> ";
+                    output += "<button style='border: 0;background: url(img/cancel.png);width:30px;height:30px;background-size: 100%;' href='" + order.id + "' action='cancel' title='Cancel Order'></button></td>";
+                    }else{
+                        output += "<td></td>";
+                    }
+                    output += "</tr>";
+                }
+
+                console.log("Output: " + output);
+
+                $("#orders-body").html(output);
+
+
+            },
+            error: function (error) {
+                console.log("Query Error: " + error.message);
+            }
+        });
+
+    }
+
+
+    $("#new-category-form").submit(function (event) {
+        event.preventDefault();
+        var name = $("#category-name").val();
+        var order = $("#category-order").val();
+
+        var fileUploadControl = $("#pic")[0];
+        if (fileUploadControl.files.length > 0) {
+            var file = fileUploadControl.files[0];
+            var filename = name + ".png";
+
+            var parseFile = new Parse.File(filename, file);
+
+            //put this inside if {
+            parseFile.save().then(function () {
+                console.log("Image uploaded successfully...");
+            }, function (error) {
+                console.log("Error Uploading Image: " + error.message);
+            });
+        }
+
+        if (object_id != null) {
+            var query = new Parse.Query(Category);
+            query.equalTo("objectId", object_id);
+            query.find({
+                success: function (results) {
+                    var category = results[0];
+
+                    category.set("name", name);
+                    category.set("order", parseInt(order));
+                    if (parseFile != null) {
+                        category.set("image", parseFile);
+                    }
+
+                    category.save({
+                        success: function () {
+                            //alert("Category has been saved successfully...");
+                            $("content").show();
+                            $("form").hide();
+                            getCategories();
+                            //location.reload();
+
+                        },
+                        error: function (error) {
+                            console.log("Error: " + error.message);
+                        }
+                    });
+                },
+                error: function (error) {
+                    console.log("Query Error: " + error.message);
+                }
+            });
+        } else {
+            var category = new Category();
+            category.set("name", name);
+            category.set("order", parseInt(order));
+            if (parseFile != null) {
+                category.set("image", parseFile);
+            }
+
+            category.save({
+                success: function () {
+                    //alert("Category has been saved successfully...");
+                    $("content").show();
+                    $("form").hide();
+                    getCategories();
+                    //location.reload();
+
+                },
+                error: function (error) {
+                    console.log("Error: " + error.message);
+                }
+            });
+        }
+    });
+
+</script>
+
+
+</body>
+
+</html>

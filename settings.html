@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <link rel="icon" href="../../favicon.ico">
+
+        <title>Settings</title>
+
+        <!-- Bootstrap core CSS -->
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+
+        <!-- Custom styles for this template -->
+        <link href="css/dashboard.css" rel="stylesheet">
+        <link href="css/common.css" rel="stylesheet">
+
+        <script type="text/javascript" src="js/jquery.min.js"></script>
+        <script src="js/tether.min.js"></script>
+        <script src="js/bootstrap.min.js"></script>
+        <script src="js/parse.min.js"></script>
+        <script src="js/common.js"></script>
+
+        <style>
+            #myInput {
+                background-image: url('img/searchicon.png'); /* Add a search icon to input */
+                background-position: 10px 12px; /* Position the search icon */
+                background-repeat: no-repeat; /* Do not repeat the icon image */
+                width: 100%; /* Full-width */
+                font-size: 16px; /* Increase font-size */
+                padding: 12px 20px 12px 40px; /* Add some padding */
+                border: 1px solid #ddd; /* Add a grey border */
+                margin-bottom: 12px; /* Add some space below the input */
+            }
+
+        </style>
+
+    </head>
+
+    <body>
+        <nav class="navbar navbar-toggleable-md navbar-inverse fixed-top bg-inverse">
+            <button class="navbar-toggler navbar-toggler-right hidden-lg-up" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <a class="navbar-brand" href="#" ><img style="width:100px;margin-right:20px;" src="img/chaghi-logo.jpg">Chaghi 25 - Settings</a>
+
+        </nav>
+
+        <div class="container-fluid">
+            <div class="row">
+                <nav id="sidebar" class="col-sm-3 col-md-2 hidden-xs-down bg-faded sidebar">
+
+                </nav>
+
+                <main class="col-sm-9 offset-sm-3 col-md-10 offset-md-2 pt-3">
+
+                    <div id="content" class="table-responsive">
+                        <h1>Settings</h1>
+                        <button id="new-setting" class="new-button" href="#">New Setting</button>
+                        <input type="text" id="myInput" onkeyup="myFunction()" placeholder="What are you looking for?..">
+
+                        <table id="myTable" class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <td>Key</td>
+                                    <td>Value</td>
+                                    <td>Actions</td>
+                                </tr>
+                            </thead>
+                            <tbody id="settings-body">
+
+                            </tbody>
+
+                        </table>
+                    </div>
+
+                    <div id="form">
+                        <h1>Setting</h1>
+                        <form id="new-setting-form">
+                            <p>Key</p>
+                            <input id="setting-key" type="text">
+
+                            <p>Value</p>
+                            <input id="setting-value" type="text">
+
+
+                            <br /><br />
+                            <p><input id="new-setting-submit" type="submit"><input id="cancel" type="submit" value="Cancel"></p>
+
+                        </form>
+                    </div>
+
+
+
+                </main>
+            </div>
+        </div>
+
+
+        <script type="text/javascript">
+
+
+
+            $(document).ready(function () {
+
+                check_auth("Settings");
+
+                $("#form").hide();
+
+                getSettings();
+
+            });
+
+            $("#cancel").click(function () {
+                window.location.href = "settings.html";
+            });
+
+            $("#new-setting").click(function () {
+                $("#content").hide();
+                $("#form").show();
+            });
+
+            var object_id = null;
+
+
+
+
+            $("#settings-body").on("click", "button", function (event) {
+                event.preventDefault();
+
+                var id = $(this).attr("href");
+                var action = $(this).attr("action");
+                console.log("action: " + action);
+                object_id = id;
+                var query = new Parse.Query(Setting);
+                query.equalTo("objectId", id);
+                query.find({
+                    success: function (results) {
+                        if (action == "edit") {
+                            $("#setting-key").val(results[0].get("key"));
+                            $("#setting-value").val(results[0].get("value"));
+
+                            $("#content").hide();
+                            $("#form").show();
+                        } else if (action == "delete") {
+                            console.log("Deleting User: " + results[0].get("key"));
+                            if (confirm("Are you sure!") == true) {
+                                results[0].destroy();
+                                getSettings();
+                            }
+
+                        }
+
+
+                    },
+                    error: function (error) {
+                        console.log("Query Error: " + error.message);
+                    }
+                });
+
+            });
+
+            function getSettings() {
+                var query = new Parse.Query(Setting);
+                query.find({
+                    success: function (results) {
+                        var output = "";
+                        console.log("Users found: " + results.length);
+                        for (var i in results) {
+                            var key = results[i].get("key");
+                            var value = results[i].get("value");
+
+                            var id = results[i].id;
+
+                            output += "<tr>";
+
+                            output += "<td>" + key + "</td>";
+                            output += "<td>" + value + "</td>";
+
+
+                            output += "<td><button href='" + id + "' action='edit'>Edit</button> <button href='" + id + "' action='delete'>Delete</button></td>";
+                            output += "</tr>";
+
+                        }
+
+                        console.log(output);
+                        $("#settings-body").html(output);
+
+                    },
+                    error: function (error) {
+                        console.log("Query Error: " + error.message);
+                    }
+                });
+
+            }
+
+
+
+            $("#new-setting-form").submit(function (event) {
+                event.preventDefault();
+                var key = $("#setting-key").val();
+                var value = $("#setting-value").val();
+
+
+
+                if (object_id != null) {
+                    var query = new Parse.Query(Setting);
+                    query.equalTo("objectId", object_id);
+                    query.find({
+                        success: function (results) {
+                            var setting = results[0];
+
+                            setting.set("key", key);
+                            setting.set("value", value);
+                            setting.save({
+                                success: function () {
+//
+//
+                                    window.location.href = "settings.html";
+                                },
+                                error: function (error) {
+                                    console.log("Error: " + error.message);
+                                }
+                            });
+                        },
+                        error: function (error) {
+                            console.log("Query Error: " + error.message);
+                        }
+                    });
+                } else {
+                    var setting = new Setting();
+                    setting.set("key", key);
+                    setting.set("value", value);
+
+                    setting.save({
+                        success: function () {
+//
+//
+                            window.location.href = "settings.html";
+                        },
+                        error: function (error) {
+                            console.log("Error: " + error.message);
+                        }
+                    });
+
+
+                }
+
+            });
+
+        </script>
+
+
+    </body>
+
+</html>
